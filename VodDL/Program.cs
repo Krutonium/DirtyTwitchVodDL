@@ -18,7 +18,7 @@ namespace VodDL
             try
             {
                 int x = 0;
-                while (x < 50)
+                while (true)
                 {
                     var Client = new WebClient();
                     Client.DownloadFileCompleted += ClientOnDownloadFileCompleted;
