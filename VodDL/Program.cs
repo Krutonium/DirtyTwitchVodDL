@@ -8,9 +8,10 @@ namespace VodDL
     class Program
     {
         private static int CurrentDownloads;
+        static List<string> Files = new List<string>();
+        static bool DownloadDone = false;
         static void Main(string[] args)
         {
-            List<string> Files = new List<string>();
             if (!Directory.Exists("./vod/"))
             {
                 Directory.CreateDirectory("./vod/");
@@ -18,7 +19,7 @@ namespace VodDL
             try
             {
                 int x = 0;
-                while (true)
+                while (!DownloadDone)
                 {
                     var Client = new WebClient();
                     Client.DownloadFileCompleted += ClientOnDownloadFileCompleted;
@@ -57,6 +58,11 @@ namespace VodDL
         private static void ClientOnDownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
             CurrentDownloads -= 1;
+            long length = new FileInfo(Files[Files.Count]).Length;
+            if (length < 500) //less than 500 bytes
+            {
+                DownloadDone = true;
+            }
         }
     }
 }
