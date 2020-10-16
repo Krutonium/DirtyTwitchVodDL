@@ -24,8 +24,11 @@ namespace VodDL
                     var Client = new WebClient();
                     Client.DownloadFileCompleted += ClientOnDownloadFileCompleted;
                     string link = args[0] + x + ".ts";
-                    Client.DownloadFileTaskAsync(new Uri(link), "./vod/" + x + ".ts");
-                    CurrentDownloads += 1;
+                    if(!File.Exists("./vod/" + x + ".ts"))
+                    {
+                        Client.DownloadFileTaskAsync(new Uri(link), "./vod/" + x + ".ts");
+                        CurrentDownloads += 1;
+                    }
                     Files.Add("./vod/" + x + ".ts");
                     Console.WriteLine("Downloading " + x);
                     x++;
@@ -40,6 +43,12 @@ namespace VodDL
                 Console.WriteLine(ex.ToString());
                 Console.WriteLine("Done"); 
             }
+
+            while (CurrentDownloads != 0)
+            {
+                Console.WriteLine(String.Format("Waiting for {0} Downloads to finish", CurrentDownloads.ToString()));
+                System.Threading.Thread.Sleep(500);
+            }
             Console.WriteLine("Combining Files...");
             using (Stream destStream = File.OpenWrite(args[1]))
             {
@@ -48,7 +57,7 @@ namespace VodDL
                     using (Stream srcStream = File.OpenRead(srcFileName))
                     {
                         long length = new FileInfo(srcFileName).Length;
-                        if (length > 500)
+                        if (length > 50)
                         {
                             srcStream.CopyTo(destStream);
                         }
@@ -62,10 +71,18 @@ namespace VodDL
         private static void ClientOnDownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
             CurrentDownloads -= 1;
-            long length = new FileInfo(Files[Files.Count]).Length;
-            if (length < 500) //less than 500 bytes
+            var fi = Files[^9];
+            long length = new FileInfo(fi).Length;
+            if (length < 50) //less than 100 bytes
             {
-                DownloadDone = true;
+                //Can somtimes be a false positive, check again
+                System.Threading.Thread.Sleep(TimeSpan.FromSeconds(5)); 
+                length = new FileInfo(fi).Length;
+                if (length < 50) //less than 100 bytes
+                {
+                    DownloadDone = true;
+                    Console.WriteLine("Ending Download");
+                }
             }
         }
     }
