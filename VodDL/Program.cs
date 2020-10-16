@@ -47,7 +47,11 @@ namespace VodDL
                 {
                     using (Stream srcStream = File.OpenRead(srcFileName))
                     {
-                        srcStream.CopyTo(destStream);
+                        long length = new FileInfo(srcFileName).Length;
+                        if (length > 500)
+                        {
+                            srcStream.CopyTo(destStream);
+                        }
                     }
                 }
             }
